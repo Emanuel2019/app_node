@@ -69,7 +69,7 @@ route.get("/:id", (req, res, next) => {
       });
     }
     conn.query(
-      `SELECT * FROM \`groups\` WHERE id = ?`,
+      `SELECT * FROM groups_users WHERE id = ?`,
       [id],
       (error, result, field) => {
         conn.release();
@@ -81,8 +81,7 @@ route.get("/:id", (req, res, next) => {
         const groups = result.map((groups) => {
           return {
             id: groups.id,
-            name: groups.name,
-            description: groups.description,
+            group_id: group.group_id,
             user_id:groups.user_id,
             created_at: groups.created_at,
             updated_at: groups.updated_at,
@@ -99,10 +98,11 @@ route.get("/:id", (req, res, next) => {
 // Atualiza um groups especifico
 route.put("/:id", (req, res, next) => {
   const id = req.params.id;
+  const currentDate=new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "UPDATE \`groups\` SET name=?,description=?,user_id=? WHERE id=?",
-      [req.body.name, req.body.description, req.body.user_id, id],
+      "UPDATE groups_users SET user_id=?,group_id=?,updated_at=? WHERE id=?",
+      [req.body.user_id, req.body.group_id, currentDate, id],
       (error, resultado, field) => {
         if (error) {
           return res.status(500).send({
@@ -111,7 +111,7 @@ route.put("/:id", (req, res, next) => {
         }
         return res.status(202).send({
           message: "groups actualizado com sucesso!",
-          Id: resultado.insertId,
+          Id: resultado.id,
         });
       }
     );
@@ -123,7 +123,7 @@ route.delete("/:id", (req, res, next) => {
   const id = req.params.id;
   mysql.getConnection((error, conn) => {
     conn.query(
-      "DELETE FROM \`groups\` WHERE id=?",
+      "DELETE FROM groups_users WHERE id=?",
       [id],
       (error, resultado, field) => {
         if (error) {
