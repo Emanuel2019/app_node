@@ -36,11 +36,26 @@ route.get('/',(req, res, next) => {
 }
 );
 // Regista um novo Ficheiro
-route.post('/',(req, res, next) => {
+route.post('/', (req, res, next) => {
+    const currentDate = new Date();
+
     mysql.getConnection((error, conn) => {
+        if (error) {
+            res.status(500).send({
+                error: error,
+            });
+            return;
+        }
+
         conn.query(
-            "INSERT INTO files (name,description,active) VALUES (?,?,?)",
-            [req.body.name, req.body.description, req.body.active],
+            "INSERT INTO files (filename, task_id, reply_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            [
+                req.body.filename,
+                req.body.task_id,
+                req.body.reply_id,
+                currentDate,
+                currentDate,
+            ],
             (error, resultado, field) => {
                 if (error) {
                     res.status(500).send({
@@ -55,10 +70,9 @@ route.post('/',(req, res, next) => {
                 conn.release();
             }
         );
-    }
-    );
-}
-);
+    });
+});
+
 // Lista um Ficheiro especifico
 route.get('/:id',(req, res, next) => {
     const id = req.params.id;
@@ -100,8 +114,8 @@ route.put('/:id',(req, res, next) => {
     const id = req.params.id;
     mysql.getConnection((error, conn) => {
         conn.query(
-            "UPDATE files SET name = ?, description = ?, active = ? WHERE id = ?",
-            [req.body.name, req.body.description, req.body.active, id],
+            "UPDATE files SET filename = ?, task_id = ?, reply_id = ? WHERE id = ?",
+            [req.body.filename, req.body.task_id, req.body.reply_id, id],
             (error, result, field) => {
                 if (error) {
                     res.status(500).send({
@@ -110,7 +124,7 @@ route.put('/:id',(req, res, next) => {
                 } else {
                     res.status(201).send({
                         message: "Ficheiro atualizado com sucesso!",
-                        Id: result.insertId,
+                        Id: result.id,
                     });
                 }
                 conn.release();

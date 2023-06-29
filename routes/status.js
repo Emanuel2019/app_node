@@ -34,10 +34,11 @@ route.get("/", (req, res, next) => {
 });
 // Regista um novo estado
 route.post("/", (req, res, next) => {
+  const currentDate=new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "INSERT INTO status (name,description,active) VALUES (?,?,?)",
-      [req.body.name, req.body.description, req.body.active],
+      "INSERT INTO status (name,description,color,created_at,updated_at) VALUES (?,?,?,?,?)",
+      [req.body.name, req.body.description, req.body.color,currentDate,currentDate],
       (error, resultado, field) => {
         if (error) {
           res.status(500).send({
@@ -93,10 +94,11 @@ route.get("/:id", (req, res, next) => {
 // Atualiza um estado especifico
 route.put("/:id", (req, res, next) => {
   const id = req.params.id;
+  const currentDate=new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "UPDATE status SET name = ?, description = ?, active = ? WHERE id = ?",
-      [req.body.name, req.body.description, req.body.active, id],
+      "UPDATE status SET name = ?, description = ?, color = ?,updated_at=? WHERE id = ?",
+      [req.body.name, req.body.description, req.body.color,currentDate, id],
       (error, result, field) => {
         if (error) {
           res.status(500).send({

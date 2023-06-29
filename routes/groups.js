@@ -4,40 +4,46 @@ const mysql = require("../mysql").pool;
 // Lista todos os groupses
 route.get("/", (req, res, next) => {
   mysql.getConnection((error, conn) => {
-    if (error) {
-      return res.status(500).send({
-        error: error,
-      });
-    }
-    conn.query(`SELECT * FROM groups`, (error, result, field) => {
-      conn.release();
       if (error) {
-        return res.status(500).send({
-          error: error,
-        });
+          return res.status(500).send({
+              error: error,
+          });
       }
-      const groups = result.map((group) => {
-        return {
-          id: group.id,
-          name: group.name,
-          description: group.description,
-          created_at: group.created_at,
-          updated_at: group.updated_at,
-        };
+
+      conn.query(`SELECT * FROM \`groups\``, (error, result, field) => {
+          conn.release();
+          if (error) {
+              return res.status(500).send({
+                  error: error,
+              });
+          }
+
+          const groups = result.map((group) => {
+              return {
+                  id: group.id,
+                  name: group.name,
+                  description: group.description,
+                  user_id:group.user_id,
+                  created_at: group.created_at,
+                  updated_at: group.updated_at,
+              };
+          });
+
+          return res.status(200).send({
+              groups: groups,
+          });
       });
-      return res.status(200).send({
-        group: groups,
-      });
-    });
-    //   res.status(200).send({ message: "Listei todos os groupss do sistema!" });
   });
 });
+
+
 // Regista um novo groups
 route.post("/", (req, res, next) => {
+  const currentDate=new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "INSERT INTO groups (name,description,user_id,created_at) VALUES (?,?,?,?)",
-      [req.body.name, req.body.description, req.body.user_id, req.body.created_at= new Date()],
+      "INSERT INTO \`groups\` (name,description,user_id,created_at,updated_at) VALUES (?,?,?,?,?)",
+      [req.body.name, req.body.description, req.body.user_id, currentDate,currentDate ],
       (error, resultado, field) => {
         if (error) {
           res.status(500).send({
@@ -64,7 +70,7 @@ route.get("/:id", (req, res, next) => {
       });
     }
     conn.query(
-      `SELECT * FROM groups WHERE id = ?`,
+      `SELECT * FROM \`groups\` WHERE id = ?`,
       [id],
       (error, result, field) => {
         conn.release();
@@ -78,6 +84,7 @@ route.get("/:id", (req, res, next) => {
             id: groups.id,
             name: groups.name,
             description: groups.description,
+            user_id:groups.user_id,
             created_at: groups.created_at,
             updated_at: groups.updated_at,
           };
@@ -95,8 +102,8 @@ route.put("/:id", (req, res, next) => {
   const id = req.params.id;
   mysql.getConnection((error, conn) => {
     conn.query(
-      "UPDATE groups SET name=?,description=?,active=? WHERE id=?",
-      [req.body.name, req.body.description, req.body.active, id],
+      "UPDATE \`groups\` SET name=?,description=?,user_id=? WHERE id=?",
+      [req.body.name, req.body.description, req.body.user_id, id],
       (error, resultado, field) => {
         if (error) {
           return res.status(500).send({
@@ -104,7 +111,7 @@ route.put("/:id", (req, res, next) => {
           });
         }
         return res.status(202).send({
-          message: "groups atualizado com sucesso!",
+          message: "groups actualizado com sucesso!",
           Id: resultado.insertId,
         });
       }
@@ -117,7 +124,7 @@ route.delete("/:id", (req, res, next) => {
   const id = req.params.id;
   mysql.getConnection((error, conn) => {
     conn.query(
-      "DELETE FROM groups WHERE id=?",
+      "DELETE FROM \`groups\` WHERE id=?",
       [id],
       (error, resultado, field) => {
         if (error) {
@@ -127,7 +134,7 @@ route.delete("/:id", (req, res, next) => {
         }
         return res.status(202).send({
           message: "groups apagado com sucesso!",
-          Id: resultado.insertId,
+          Id: resultado.id,
         });
       }
     );

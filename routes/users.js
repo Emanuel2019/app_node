@@ -1,6 +1,7 @@
 const express= require('express');
 const route= express.Router();
 const mysql = require("../mysql").pool;
+const bcrypt = require('bcrypt');
 // Lista todos os utilizadores
 route.get('/',(req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -38,28 +39,51 @@ route.get('/',(req, res, next) => {
 }
 );
 // Regista um novo utilizador
-route.post('/',(req, res, next) => {
+route.post('/', (req, res, next) => {
     mysql.getConnection((error, conn) => {
-        conn.query("INSERT INTO users (name,email,password,role,country,phone) VALUES (?,?,?,?,?,?)",
-            [req.body.name, req.body.email, req.body.password, req.body.role, req.body.country, req.body.phone],
-            (error, resultado, field) => {
-                if (error) {
-                    res.status(500).send({
-                        error: error,
-                    });
-                } else {
-                    res.status(201).send({
-                        message: "Utilizador registado com sucesso!",
-                        Id: resultado.insertId,
-                    });
-                }
-                conn.release();
+        if (error) {
+            res.status(500).send({
+                error: error,
+            });
+            return;
+        }
+
+        bcrypt.hash(req.body.password, 10, (hashError, hashedPassword) => {
+            if (hashError) {
+                res.status(500).send({
+                    error: hashError,
+                });
+                return;
             }
-        );
-    }
-    );
-}
-);
+
+            conn.query(
+                "INSERT INTO users (name, email, password, role, country, phone) VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    req.body.name,
+                    req.body.email,
+                    hashedPassword,
+                    req.body.role,
+                    req.body.country,
+                    req.body.phone,
+                ],
+                (insertError, resultado, field) => {
+                    if (insertError) {
+                        res.status(500).send({
+                            error: insertError,
+                        });
+                    } else {
+                        res.status(201).send({
+                            message: "Utilizador registado com sucesso!",
+                            Id: resultado.insertId,
+                        });
+                    }
+                    conn.release();
+                }
+            );
+        });
+    });
+});
+
 // Lista um utilizador especifico
 route.get('/:id',(req, res, next) => {
     const id = req.params.id;
@@ -103,8 +127,8 @@ route.put('/:id',(req, res, next) => {
     const id = req.params.id;
     mysql.getConnection((error, conn) => {
         conn.query(
-            "UPDATE users SET name=?,email=?,password=?,active=?,group_id=? WHERE id=?",
-            [req.body.name, req.body.email, req.body.password, req.body.active, req.body.group_id, id],
+            "UPDATE users SET name=?,email=?,password=?,active=? WHERE id=?",
+            [req.body.name, req.body.email, req.body.password, req.body.active,  id],
             (error, resultado, field) => {
                 if (error) {
                     res.status(500).send({

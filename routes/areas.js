@@ -34,10 +34,12 @@ route.get("/", (req, res, next) => {
 });
 // Regista um novo area
 route.post("/", (req, res, next) => {
+  const active =1;
+  const currentDate = new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "INSERT INTO areas (name,description,active,group_id) VALUES (?,?,?,?)",
-      [req.body.name, req.body.description, req.body.active, req.body.group_id],
+      "INSERT INTO areas (name,description,active,group_id,created_at,updated_at) VALUES (?,?,?,?,?,?)",
+      [req.body.name, req.body.description, active, req.body.group_id,currentDate,currentDate],
       (error, resultado, field) => {
         if (error) {
           res.status(500).send({
@@ -128,7 +130,7 @@ route.put("/:id", (req, res, next) => {
         }
         return res.status(200).send({
           message: "Area atualizada com sucesso!",
-          areas: result.insertId,
+          areas: id
         });
       }
     );

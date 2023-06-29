@@ -18,7 +18,7 @@ route.get('/',(req, res, next) => {
             }
             const tasks = result.map((task) => {
                 return {
-                    id: task.task_id,
+                    id: task.id,
                     name: task.name,
                     description: task.description ,
                     user_id : task.user_id ,
@@ -45,13 +45,34 @@ route.get('/',(req, res, next) => {
 }
 );
 // Regista um novo tarefa
-route.post('/',(req, res, next) => {
+route.post('/', (req, res, next) => {
+    const currentDate = new Date();
+
     mysql.getConnection((error, conn) => {
+        if (error) {
+            res.status(500).send({
+                error: error,
+            });
+            return;
+        }
+
         conn.query(
-            "INSERT INTO tasks (name,description,user_id,client_id,agent_id,type_id,group_id,area_id,status_id,channel_id,active) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            [req.body.name,req.body.description, req.body.user_id, req.body.client_id,req.body.agent_id, 
-                req.body.type_id, req.body.group_id, req.body.area_id, req.body.status_id, 
-                 req.body.channel_id, req.body.active],
+            "INSERT INTO tasks (name, description, user_id, client_id, agent_id, type_id, group_id, area_id, status_id, channel_id, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                req.body.name,
+                req.body.description,
+                req.body.user_id,
+                req.body.client_id,
+                req.body.agent_id,
+                req.body.type_id,
+                req.body.group_id,
+                req.body.area_id,
+                req.body.status_id,
+                req.body.channel_id,
+                req.body.active,
+                currentDate,
+                currentDate,
+            ],
             (error, resultado, field) => {
                 if (error) {
                     res.status(500).send({
@@ -66,10 +87,9 @@ route.post('/',(req, res, next) => {
                 conn.release();
             }
         );
-    }
-    );
-}
-);
+    });
+});
+
 // Lista um tarefa especifico
 route.get('/:id',(req, res, next) => {
     const id = req.params.id;
@@ -123,8 +143,8 @@ route.put('/:id',(req, res, next) => {
             });
         }
         conn.query(
-            "UPDATE tasks SET name=?,user_id=?,client_id=?,type_id=?,group_id=?,area_id=?,status=?,dueData=?,channel_id=?,active=?,created_at=?,updated_at=? WHERE id=?",
-            [req.body.name, req.body.user_id, req.body.client_id, req.body.type_id, req.body.group_id, req.body.area_id, req.body.status, req.body.dueData, req.body.channel_id, req.body.active, req.body.created_at, req.body.updated_at, id],
+            "UPDATE tasks SET name=?,user_id=?,client_id=?,type_id=?,group_id=?,area_id=?,status_id=?,channel_id=?,active=?,created_at=?,updated_at=? WHERE id=?",
+            [req.body.name, req.body.user_id, req.body.client_id, req.body.type_id, req.body.group_id, req.body.area_id, req.body.status_id,req.body.channel_id, req.body.active, req.body.created_at, req.body.updated_at, id],
             (error, resultado, field) => {
                 if (error) {
                     res.status(500).send({

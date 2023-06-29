@@ -8,6 +8,7 @@ const rotaTask= require('./routes/tasks');
 const rotaArea= require('./routes/areas');
 const rotaType= require('./routes/types');
 const rotaGroup= require('./routes/groups');
+const rotaGroupsUsers= require('./routes/groups_user');
 const rotaStatus= require('./routes/status');
 const rotaChannels= require('./routes/channels');
 const rotaFiles= require('./routes/files');
@@ -33,6 +34,7 @@ app.use('/groups', rotaGroup);
 app.use('/status', rotaStatus);
 app.use('/channels', rotaChannels);
 app.use('/files', rotaFiles);
+app.use('/groups_users', rotaGroupsUsers);
 app.use((req, res, next) => {
     const erro = new Error('Not Found');
     erro.status = 404;

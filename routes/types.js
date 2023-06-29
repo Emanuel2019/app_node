@@ -1,8 +1,8 @@
-const express= require('express');
-const route= express.Router();
+const express = require('express');
+const route = express.Router();
 const mysql = require("../mysql").pool;
 // Lista todos os tipoes
-route.get('/',(req, res, next) => {
+route.get('/', (req, res, next) => {
     mysql.getConnection((error, conn) => {
         if (error) {
             return res.status(500).send({
@@ -36,11 +36,26 @@ route.get('/',(req, res, next) => {
 }
 );
 // Regista um novo tipo
-route.post('/',(req, res, next) => {
+route.post('/', (req, res, next) => {
+    const currentDate = new Date();
+    const active = 1;
     mysql.getConnection((error, conn) => {
+        if (error) {
+            res.status(500).send({
+                error: error,
+            });
+            return;
+        }
+
         conn.query(
-            "INSERT INTO types (name,description,active) VALUES (?,?,?)",
-            [req.body.name, req.body.description, req.body.active],
+            "INSERT INTO types (name, description, active, created_at,updated_at) VALUES (?, ?, ?, ?,?)",
+            [
+                req.body.name,
+                req.body.description,
+                active,
+                currentDate,
+                currentDate,
+            ],
             (error, resultado, field) => {
                 if (error) {
                     res.status(500).send({
@@ -48,19 +63,18 @@ route.post('/',(req, res, next) => {
                     });
                 } else {
                     res.status(201).send({
-                        message: "tipo registado com sucesso!",
+                        message: "Tipo registado com sucesso!",
                         Id: resultado.insertId,
                     });
                 }
                 conn.release();
             }
         );
-    }
-    );
-}
-);
+    });
+});
+
 // Lista um tipo especifico
-route.get('/:id',(req, res, next) => {
+route.get('/:id', (req, res, next) => {
     const id = req.params.id;
     mysql.getConnection((error, conn) => {
         if (error) {
@@ -96,9 +110,16 @@ route.get('/:id',(req, res, next) => {
 }
 );
 // Atualiza um tipo especifico
-route.put('/:id',(req, res, next) => {
+route.put('/:id', (req, res, next) => {
     const id = req.params.id;
+
     mysql.getConnection((error, conn) => {
+        if (error) {
+            return res.status(500).send({
+                error: error,
+            });
+        }
+
         conn.query(
             "UPDATE types SET name = ?, description = ?, active = ? WHERE id = ?",
             [req.body.name, req.body.description, req.body.active, id],
@@ -109,29 +130,27 @@ route.put('/:id',(req, res, next) => {
                         error: error,
                     });
                 }
-                const types = result.map((type) => {
-                    return {
-                        id: type.id,
-                        name: type.name,
-                        description: type.description,
-                        created_at: type.created_at,
-                        updated_at: type.updated_at,
-                    };
-                }
-                );
+
                 return res.status(200).send({
-                    types: types,
+                    message: "Tipo atualizado com sucesso!",
+                    id: id,
                 });
             }
         );
-    }
-    );
-}
-);
+    });
+});
+
 // Apaga um tipo especifico
-route.delete('/:id',(req, res, next) => {
+route.delete('/:id', (req, res, next) => {
     const id = req.params.id;
+
     mysql.getConnection((error, conn) => {
+        if (error) {
+            return res.status(500).send({
+                error: error,
+            });
+        }
+
         conn.query(
             "DELETE FROM types WHERE id = ?",
             [id],
@@ -142,23 +161,14 @@ route.delete('/:id',(req, res, next) => {
                         error: error,
                     });
                 }
-                const types = result.map((type) => {
-                    return {
-                        id: type.id,
-                        name: type.name,
-                        description: type.description,
-                        created_at: type.created_at,
-                        updated_at: type.updated_at,
-                    };
-                }
-                );
+
                 return res.status(200).send({
-                    types: types,
+                    message: "Tipo excluído com sucesso!",
+                    id: id,
                 });
             }
         );
-    }
-    );
-}
-);
+    });
+});
+
 module.exports = route;
