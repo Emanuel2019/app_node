@@ -10,7 +10,7 @@ route.get("/", (req, res, next) => {
           });
       }
 
-      conn.query(`SELECT * FROM groups_users`, (error, result, field) => {
+      conn.query(`SELECT * FROM priority`, (error, result, field) => {
           conn.release();
           if (error) {
               return res.status(500).send({
@@ -18,18 +18,20 @@ route.get("/", (req, res, next) => {
               });
           }
 
-          const groups = result.map((group) => {
+          const priorities = result.map((priority) => {
               return {
-                  id: group.id,
-                  group_id: group.group_id,
-                  user_id:group.user_id,
-                  created_at: group.created_at,
-                  updated_at: group.updated_at,
+                  id: priority.id,
+                  name: priority.name,
+                  duration: priority.duration,
+                  responseTime:priority.responseTime,
+                  active:priority.active,
+                  created_at: priority.created_at,
+                  updated_at: priority.updated_at,
               };
           });
 
           return res.status(200).send({
-              groups: groups,
+            priorities: priorities,
           });
       });
   });
@@ -39,10 +41,11 @@ route.get("/", (req, res, next) => {
 // Regista um novo groups
 route.post("/", (req, res, next) => {
   const currentDate=new Date();
+  const active=1;
   mysql.getConnection((error, conn) => {
     conn.query(
-      "INSERT INTO groups_users (user_id,group_id,created_at,updated_at) VALUES (?,?,?,?)",
-      [req.body.user_id, req.body.group_id, currentDate,currentDate ],
+      "INSERT INTO priority (name,duration,responseTime,active,created_at,updated_at) VALUES (?,?,?,?,?,?)",
+      [req.body.name, req.body.duration, req.body.responseTime,active, currentDate,currentDate ],
       (error, resultado, field) => {
         if (error) {
           res.status(500).send({
@@ -50,7 +53,7 @@ route.post("/", (req, res, next) => {
           });
         } else {
           res.status(201).send({
-            message: "groups registado com sucesso!",
+            message: "prioridade registado com sucesso!",
             Id: resultado.insertId,
           });
         }
@@ -69,7 +72,7 @@ route.get("/:id", (req, res, next) => {
       });
     }
     conn.query(
-      `SELECT * FROM groups_users WHERE id = ?`,
+      `SELECT * FROM priority WHERE id = ?`,
       [id],
       (error, result, field) => {
         conn.release();
@@ -78,17 +81,19 @@ route.get("/:id", (req, res, next) => {
             error: error,
           });
         }
-        const groups = result.map((groups) => {
+        const priorities = result.map((priorities) => {
           return {
-            id: groups.id,
-            group_id: groups.group_id,
-            user_id:groups.user_id,
-            created_at: groups.created_at,
-            updated_at: groups.updated_at,
+            id: priorities.id,
+            name: priorities.name,
+            duration: priorities.duration,
+            responseTime:priorities.responseTime,
+            active:priorities.active,
+            created_at: priorities.created_at,
+            updated_at: priorities.updated_at,
           };
         });
         return res.status(200).send({
-          groups: groups,
+            priorities: priorities,
         });
       }
     );
@@ -98,11 +103,10 @@ route.get("/:id", (req, res, next) => {
 // Atualiza um groups especifico
 route.put("/:id", (req, res, next) => {
   const id = req.params.id;
-  const currentDate=new Date();
   mysql.getConnection((error, conn) => {
     conn.query(
-      "UPDATE groups_users SET user_id=?,group_id=?,updated_at=? WHERE id=?",
-      [req.body.user_id, req.body.group_id, currentDate, id],
+      "UPDATE priority SET name=?,duration=?,responseTime=? WHERE id=?",
+      [req.body.name, req.body.duration, req.body.responseTime, id],
       (error, resultado, field) => {
         if (error) {
           return res.status(500).send({
@@ -110,8 +114,8 @@ route.put("/:id", (req, res, next) => {
           });
         }
         return res.status(202).send({
-          message: "groups actualizado com sucesso!",
-          Id: resultado.id,
+          message: "prioridade actualizada com sucesso!",
+          Id: resultado.insertId,
         });
       }
     );
@@ -123,7 +127,7 @@ route.delete("/:id", (req, res, next) => {
   const id = req.params.id;
   mysql.getConnection((error, conn) => {
     conn.query(
-      "DELETE FROM groups_users WHERE id=?",
+      "DELETE FROM priority WHERE id=?",
       [id],
       (error, resultado, field) => {
         if (error) {

@@ -5,6 +5,7 @@
     "MYSQL_PASSWORD": "",
     "MYSQL_HOST": "localhost",
     "MYSQL_PORT": "3306",
-    "MYSQL_DATABASE": "helptask"
+    "MYSQL_DATABASE": "helptask",
+    "SECRET_KEY":"segredo"
     }
 }
