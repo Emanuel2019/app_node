@@ -8,12 +8,12 @@ const update = async (req, res, next) => {
             const errorMessages = errors.array().map(error => error.msg);
             return res.status(400).json({ errors: errorMessages });
         }
-        const query = "UPDATE types SET name = ?, description = ?, active = ? WHERE id = ?";
-        const result = await mysql.execute(query, [req.body.name, req.body.description, req.body.active, id]);
-        return res.status(200).send({
-            message: "Tipo atualizado com sucesso!",
-            id: id,
-        });
+        const query =  "UPDATE priority SET name=?,duration=?,responseTime=? WHERE id=?";
+        const result = await mysql.execute(query,  [req.body.name, req.body.duration, req.body.responseTime, id]);
+        return res.status(202).send({
+            message: "prioridade actualizada com sucesso!",
+            Id: id,
+          });
     } catch (error) {
         return res.status(500).send({
             error: error,
@@ -30,15 +30,5 @@ module.exports = [
         .isLength({ max: 200 })
         .withMessage('O nome deve ter no máximo 200 caracteres')
     ,
-
-    body('description')
-        .notEmpty()
-        .withMessage('A descrição é obrigatória.')
-        .isLength({ min: 4 })
-        .withMessage('O descrição deve ter no mínimo 4 caracteres')
-        .isLength({ max: 200 })
-        .withMessage('O descrição deve ter no máximo 200 caracteres'),
-  
-
     update,
 ];

@@ -2,10 +2,10 @@ const mysql = require("../mysql");
 const typeDelete=async(req, res, next) => {
     const id = req.params.id;
 try {
-   const query= "DELETE FROM types WHERE id = ?";
+   const query= "DELETE FROM priority WHERE id = ?";
    const result=await mysql.execute(query,[id]);
    return res.status(200).send({
-    message: "Tipo excluído com sucesso!",
+    message: "Prioridade excluída com sucesso!",
     id: id,
 });
 } catch (error) {
