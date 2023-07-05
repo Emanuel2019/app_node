@@ -5,7 +5,7 @@ const login = async (req, res) => {
     const {email,password}=req.body
 
     if(req.body.email.trim()===''||req.body.password.trim()===''){
-        return res.status(400).send({msg:"email or password must not be empty"})
+        return res.status(400).send({msg:"E-mail ou senha não devem estar vazios"})
     
     }
     mysql.getConnection((error, conn) => {
@@ -20,7 +20,7 @@ const login = async (req, res) => {
         //check whether the user with that email exists or not
         if(result.length<1){
             return res.status(401).send({
-                msg:'email or password is incorrect'
+                msg:'E-mail ou password está incorreto'
             })
             }
           
@@ -29,7 +29,7 @@ const login = async (req, res) => {
           
               if(err){
                   return res.status(401).send({
-                    msg:"email or Password is incorrect "
+                    msg:"E-mail ou password está incorreto "
                 })
             }
             
@@ -40,7 +40,7 @@ const login = async (req, res) => {
                     email:result[0].email
                 },
                 process.env.SECRET_KEY,{
-                    expiresIn:"1h"
+                    expiresIn:"2h"
                 }
                 )
                 return res.status(200).send({
@@ -52,12 +52,7 @@ const login = async (req, res) => {
                 msg:"Falha de Autenticação"
             });
              //generate token
-             const token=jwt.sign({id:result[0].id.toString()},process.env.SECRET_KEY)   
-               return res.status(200).send({
-                msg:"logged in successfully",
-                user:result[0],
-                token
-             })
+           
           
           })
 

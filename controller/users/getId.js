@@ -8,6 +8,7 @@ const getId = async (req, res, next) => {
             return {
                 id: user.id,
                 name: user.name,
+                role:user.role,
                 email: user.email,
                 active: user.active,
                 created_at: user.created_at,
