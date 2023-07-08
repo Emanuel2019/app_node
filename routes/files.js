@@ -1,162 +1,96 @@
 const express= require('express');
 const route= express.Router();
-const mysql = require("../mysql").pool;
-// Lista todos os Ficheiroes
-route.get('/',(req, res, next) => {
-    mysql.getConnection((error, conn) => {
-        if (error) {
-            return res.status(500).send({
-                error: error,
-            });
-        }
-        conn.query(`SELECT * FROM files`, (error, result, field) => {
-            conn.release();
-            if (error) {
-                return res.status(500).send({
-                    error: error,
-                });
-            }
-            const files = result.map((file) => {
-                return {
-                    id: file.id,
-                    name: file.name,
-                    description: file.description,
-                    created_at: file.created_at,
-                    updated_at: file.updated_at,
-                };
-            });
-            return res.status(200).send({
-                files: files,
-            });
-        }
-        );
-        //   res.status(200).send({ message: "Listei todos os users do sistema!" });
-    }
-    );
-}
-);
-// Regista um novo Ficheiro
-route.post('/', (req, res, next) => {
-    const currentDate = new Date();
+const filesGetAll=require('../controller/files/getAll');
+const filesGetId=require('../controller/files/getId');
+const filesCreate=require('../controller/files/create');
+const filesUpdate=require('../controller/files/update');
+const filesDelete=require('../controller/files/delete');
+const mysql = require("../mysql");
+const authentication=require('../middleware/login');
+const multer = require('multer');
+const path = require('path');
 
-    mysql.getConnection((error, conn) => {
-        if (error) {
-            res.status(500).send({
-                error: error,
-            });
-            return;
-        }
-
-        conn.query(
-            "INSERT INTO files (filename, task_id, reply_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-            [
-                req.body.filename,
-                req.body.task_id,
-                req.body.reply_id,
-                currentDate,
-                currentDate,
-            ],
-            (error, resultado, field) => {
-                if (error) {
-                    res.status(500).send({
-                        error: error,
-                    });
-                } else {
-                    res.status(201).send({
-                        message: "Ficheiro registado com sucesso!",
-                        Id: resultado.insertId,
-                    });
-                }
-                conn.release();
-            }
-        );
-    });
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
+  }
 });
 
+const upload = multer({ storage }).array('files');
+
+// Lista todos os Ficheiroes
+route.get('/',authentication.obrigatorio,filesGetAll);
+// Regista um novo Ficheiro
+route.post('/',authentication.obrigatorio,filesCreate);
+route.post('/upload', (req, res) => {
+    upload(req, res, (err) => {
+      if (err) {
+        console.error('Erro ao fazer upload de arquivos: ' + err);
+        return res.status(500).json({ error: 'Erro ao fazer upload de arquivos.' });
+      }
+  
+      try {
+        upload(req, res, (err) => {
+          if (err) {
+            console.error('Erro ao fazer upload de arquivos: ' + err);
+            return res.status(500).json({ error: 'Erro ao fazer upload de arquivos.' });
+          }
+    
+          const file = req.files[0];
+          const name = req.body.name;
+          const task_id = req.body.task_id;
+    
+          const taskQuery = "INSERT INTO tasks (name, description, user_id, client_id, type_id, group_id, area_id, status_id, channel_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+          mysql.execute(taskQuery, [
+            name,
+            req.body.description,
+            req.body.user_id,
+            req.body.client_id,
+            req.body.type_id,
+            req.body.group_id,
+            req.body.area_id,
+            req.body.status_id,
+            req.body.channel_id,
+            currentDate,
+            currentDate,
+          ], (err, taskResult) => {
+            if (err) {
+              console.error('Erro ao inserir a tarefa: ' + err.stack);
+              return res.status(500).json({ error: 'Erro ao inserir a tarefa.' });
+            }
+    
+            const taskId = taskResult.insertId;
+    
+            // Inserir o arquivo na tabela "files"
+            const fileQuery = 'INSERT INTO files (filename, task_id, created_at, updated_at) VALUES (?, ?, ?, ?)';
+            mysql.execute(fileQuery, [file.filename, taskId, currentDate, currentDate], (err) => {
+              if (err) {
+                console.error('Erro ao inserir o arquivo: ' + err.stack);
+                return res.status(500).json({ error: 'Erro ao inserir o arquivo.' });
+              }
+    
+              res.send({
+                success: true,
+                message: 'Arquivo enviado!'
+              });
+            });
+          });
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({
+          success: false,
+          message: 'Erro ao enviar o arquivo'
+        });
+      }
+    
+    });
+  });
 // Lista um Ficheiro especifico
-route.get('/:id',(req, res, next) => {
-    const id = req.params.id;
-    mysql.getConnection((error, conn) => {
-        if (error) {
-            return res.status(500).send({
-                error: error,
-            });
-        }
-        conn.query(`SELECT * FROM files WHERE id = ?`, [id], (error, result, field) => {
-            conn.release();
-            if (error) {
-                return res.status(500).send({
-                    error: error,
-                });
-            }
-            const files = result.map((file) => {
-                return {
-                    id: file.id,
-                    name: file.name,
-                    description: file.description,
-                    created_at: file.created_at,
-                    updated_at: file.updated_at,
-                };
-            }
-            );
-            return res.status(200).send({
-                files: files,
-            });
-        }
-        );
-        //   res.status(200).send({ message: "Listei todos os users do sistema!" });
-    }
-);
-}
-);
+route.get('/:id',authentication.obrigatorio,filesGetId);
 // Atualiza um Ficheiro especifico
-route.put('/:id',(req, res, next) => {
-    const id = req.params.id;
-    mysql.getConnection((error, conn) => {
-        conn.query(
-            "UPDATE files SET filename = ?, task_id = ?, reply_id = ? WHERE id = ?",
-            [req.body.filename, req.body.task_id, req.body.reply_id, id],
-            (error, result, field) => {
-                if (error) {
-                    res.status(500).send({
-                        error: error,
-                    });
-                } else {
-                    res.status(201).send({
-                        message: "Ficheiro atualizado com sucesso!",
-                        Id: result.id,
-                    });
-                }
-                conn.release();
-            }
-        );
-    }
-    );
-}
-);
+route.put('/:id',authentication.obrigatorio,filesUpdate);
 // Apaga um Ficheiro especifico
-route.delete('/:id',(req, res, next) => {
-    const id = req.params.id;
-    mysql.getConnection((error, conn) => {
-        conn.query(
-            "DELETE FROM files WHERE id = ?",
-            [id],
-            (error, result, field) => {
-                if (error) {
-                    res.status(500).send({
-                        error: error,
-                    });
-                } else {
-                    res.status(201).send({
-                        message: "Ficheiro apagado com sucesso!",
-                        Id: result.insertId,
-                    });
-                }
-                conn.release();
-            }
-        );
-    }
-    );
-}
-);
+route.delete('/:id',authentication.obrigatorio,filesDelete);
 module.exports = route;

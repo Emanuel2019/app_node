@@ -5,8 +5,9 @@ const clientGetId=require('../controller/clients/getId');
 const clientCreate=require('../controller/clients/create');
 const clientUpdate=require('../controller/clients/update');
 const clientDelete=require('../controller/clients/delete');
+const upload=require('../controller/clients/upload');
 const autenticado = require('../middleware/login');
-// Lista todos os clientees
+// Lista todos os clientes
 route.get('/',autenticado.obrigatorio,clientGetAll);
 // Regista um novo cliente
 route.post('/',autenticado.obrigatorio, clientCreate);

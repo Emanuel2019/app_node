@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const mysql = require('../mysql');
-
+const upload = require('express-fileupload');
 const create = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -12,8 +12,23 @@ const create = async (req, res, next) => {
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const currentDate = new Date();
+        if (req.files) {
+            const hours = String(currentDate.getHours()).padStart(2, '0');
+            const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+            const secondes = String(currentDate.getSeconds()).padStart(2, '0');
+            var file = req.files.foto;
+            var filename = file.name;
+            filename = hours + minutes + secondes + "_" + filename;
+            file.mv('uploads/users/' + filename, function (err) {
+
+                if (err) {
+                    res.send(err)
+                }
+            })
+        }
+
         const query =
-            'INSERT INTO users (name, email, password, role, country, phone,created_at,updated_at) VALUES (?, ?, ?, ?, ?, ?,?,?)';
+            'INSERT INTO users (name, email, password, role, country, phone,photo,created_at,updated_at) VALUES (?,?, ?, ?, ?, ?, ?,?,?)';
         const resultado = await mysql.execute(query, [
             req.body.name,
             req.body.email,
@@ -21,6 +36,7 @@ const create = async (req, res, next) => {
             req.body.role,
             req.body.country,
             req.body.phone,
+            filename,
             currentDate,
             currentDate
         ]);
