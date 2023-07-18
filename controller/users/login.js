@@ -3,10 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt=require('jsonwebtoken')
 const login = async (req, res) => {
     const {email,password}=req.body
-
     if(req.body.email.trim()===''||req.body.password.trim()===''){
         return res.status(400).send({msg:"E-mail ou senha não devem estar vazios"})
-    
+
     }
     mysql.getConnection((error, conn) => {
     conn.query("SELECT * FROM users WHERE email=?",email,(err,result)=>{
@@ -37,7 +36,9 @@ const login = async (req, res) => {
           
                 const token=jwt.sign({
                     user_id:result[0].id,
-                    email:result[0].email
+                    username:result[0].name,
+                    email:result[0].email,
+                    role:result[0].role,
                 },
                 process.env.SECRET_KEY,{
                     expiresIn:"2h"

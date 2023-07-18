@@ -1,12 +1,17 @@
 const { body, validationResult } = require('express-validator');
+const Pusher = require("pusher");
+const pusher = new Pusher({
+    appId: "1636801",
+    key: "44ff09de68fa52623d22",
+    secret: "2c11e7f6d816dcf20694",
+    cluster: "sa1",
+    useTLS: true
+});
 const mysql = require('../mysql');
 
 const create = async (req, res, next) => {
     const currentDate = new Date();
     const { name, description, group_id } = req.body;
-
-    // Validação dos campos
-
 
     try {
         const errors = validationResult(req);
@@ -24,7 +29,15 @@ const create = async (req, res, next) => {
             currentDate,
             currentDate
         ]);
-
+        dataInsert={
+            "name":name,
+            "description":description,
+            "Grupo":group_id,
+            "data de criação":currentDate,
+        }
+        pusher.trigger("my-channel", "my-event", {
+            areas: dataInsert
+        });
         res.status(201).send({
             message: 'Área registrada com sucesso!',
             id: result.insertId
@@ -56,7 +69,7 @@ module.exports = [
         .withMessage('O grupo  é obrigatório.')
         .isInt({ min: 1 })
         .withMessage('O valor do grupo é inválido.')
-        ,
+    ,
 
     create,
 ];

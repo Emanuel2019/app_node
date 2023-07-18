@@ -1,7 +1,17 @@
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const mysql = require('../mysql');
+const WebSocket = require('ws');
 const upload = require('express-fileupload');
+const Pusher = require("pusher");
+const pusher = new Pusher({
+  appId: "1636801",
+  key: "44ff09de68fa52623d22",
+  secret: "2c11e7f6d816dcf20694",
+  cluster: "sa1",
+  useTLS: true
+});
+
 const create = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -40,10 +50,37 @@ const create = async (req, res, next) => {
             currentDate,
             currentDate
         ]);
-
+        const id= resultado.insertId
+        const name=req.body.name;
+        const email=req.body.email;
+        const role=req.body.role;
+        const country=req.body.country;
+        const phone=req.body.phone;
+        const message="Utilizador registado com sucesso!";
+        const dataInsert={
+            "id":id,
+            "name":name,
+            "email":email,
+            "role":role,
+            "Páis":country,
+            "Telefone":phone,
+            "data da criação":currentDate,
+            "msg_insert":message
+        };
+        
+        pusher.trigger("my-channel", "my-event", {
+            users:dataInsert
+          });
         res.status(201).send({
-            message: 'Utilizador registado com sucesso!',
-            Id: resultado.insertId,
+            message: message,
+            Id:id,
+            name:name,
+            email:email,
+            role:role,
+            country:country,
+            phone:phone,
+            data:currentDate
+
         });
     } catch (error) {
         res.status(500).send({

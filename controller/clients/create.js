@@ -2,7 +2,14 @@ const { v4: uuidv4 } = require('uuid');
 const mysql = require("../mysql");
 const { body, validationResult } = require('express-validator');
 const upload = require('express-fileupload');
-
+const Pusher = require("pusher");
+const pusher = new Pusher({
+    appId: "1636801",
+    key: "44ff09de68fa52623d22",
+    secret: "2c11e7f6d816dcf20694",
+    cluster: "sa1",
+    useTLS: true
+});
 
 const create = async (req, res, next) => {
     const currentDate = new Date();
@@ -13,7 +20,17 @@ const create = async (req, res, next) => {
     const minutes = String(currentDate.getMinutes()).padStart(2, '0');
     const secondes = String(currentDate.getSeconds()).padStart(2, '0');
     const reference = `HT${day}${month}${hours}${minutes}${secondes}`;
+    const { name,
+        address,
+        country,
+        city,
+        phone1,
+        phone2,
+        email1,
+        email2,
 
+        user_id } = req.body;
+        const message= "Cliente registado com sucesso!";
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -27,29 +44,47 @@ const create = async (req, res, next) => {
             var file = req.files.foto;
             var filename = file.name;
             filename = hours + minutes + secondes + "_" + filename;
-            file.mv('uploads/clients/'+filename, function (err) {
-              
+            file.mv('uploads/clients/' + filename, function (err) {
+
                 if (err) {
                     res.send(err)
                 }
             })
-        } 
+        }
         const query = "INSERT INTO clients (reference, name, address, country, city, phone1, phone2, email1, email2,photo,  user_id) VALUES ( ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         const result = mysql.execute(query, [
             reference,
-            req.body.name,
-            req.body.address,
-            req.body.country,
-            req.body.city,
-            req.body.phone1,
-            req.body.phone2,
-            req.body.email1,
-            req.body.email2,
+            name,
+            address,
+            country,
+            city,
+            phone1,
+            phone2,
+            email1,
+            email2,
             filename,
-            req.body.user_id,]);
+            user_id
+            ,]);
+        const dataInsert = {
+            reference,
+            name,
+            address,
+            country,
+            city,
+            phone1,
+            phone2,
+            email1,
+            email2,
+            filename,
+            user_id,
+            
+        };
+        pusher.trigger("my-channel", "my-event", {
+            cliente: dataInsert
+        });
         res.status(201).send({
-            message: "Cliente registado com sucesso!",
+            message:message,
             Id: result.insertId,
         });
 

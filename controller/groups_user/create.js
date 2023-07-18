@@ -1,8 +1,16 @@
 const mysql = require("../mysql");
+const Pusher = require("pusher");
+const pusher = new Pusher({
+    appId: "1636801",
+    key: "44ff09de68fa52623d22",
+    secret: "2c11e7f6d816dcf20694",
+    cluster: "sa1",
+    useTLS: true
+});
 const { body, validationResult } = require('express-validator');
 const create=async(req, res, next) => {
     const currentDate = new Date();
-   
+   const {user_id,group_id}=req.body;
     const active = 1;
     try {
         const errors = validationResult(req);
@@ -11,10 +19,17 @@ const create=async(req, res, next) => {
             return res.status(400).json({ errors: errorMessages });
         }
         const query=   "INSERT INTO groups_users (user_id,group_id,created_at,updated_at) VALUES (?,?,?,?)";
-        const result=await mysql.execute(query, [req.body.user_id, req.body.group_id, currentDate,currentDate ]);
+        const result=await mysql.execute(query, [user_id,group_id, currentDate,currentDate ]);
+        const groupUser_id=result.insertId;
+        dataInsert={
+            groupUser_id,user_id,group_id, currentDate
+          };
+        pusher.trigger("my-channel", "my-event", {
+            grupo: dataInsert
+        });
         res.status(201).send({
             message: "Grupos de utilizadores registado com sucesso!",
-            Id: result.insertId,
+            groups_users:dataInsert,
         });
     } catch (error) {
         res.status(500).send({

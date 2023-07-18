@@ -1,7 +1,17 @@
 const mysql = require("../mysql");
+const Pusher = require("pusher");
+const pusher = new Pusher({
+    appId: "1636801",
+    key: "44ff09de68fa52623d22",
+    secret: "2c11e7f6d816dcf20694",
+    cluster: "sa1",
+    useTLS: true
+});
 const { body, validationResult } = require('express-validator');
 const create=async(req, res, next) => {
     const currentDate = new Date();
+    const  message= "Canal registado com sucesso!";
+    const {name,description}=req.body
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -10,14 +20,25 @@ const create=async(req, res, next) => {
         }
         const query="INSERT INTO channels (name, description, created_at,updated_at) VALUES (?, ?, ?, ?)";
         const result=await mysql.execute(query, [
-            req.body.name,
-            req.body.description,
+            name,
+            description,
             currentDate,
             currentDate,
         ]);
+        const channel_id=result.insertId;
+        const dataInsert={
+            'id':channel_id,
+            'name':name,
+            'decription':description,
+            'data de criação':currentDate,
+            'msg_insert':message
+        }
+        pusher.trigger("my-channel", "my-event", {
+            canal:dataInsert
+        });
         res.status(201).send({
-            message: "Canal registado com sucesso!",
-            Id: result.insertId,
+            message: message,
+            Id: channel_id,
         });
     } catch (error) {
         res.status(500).send({
