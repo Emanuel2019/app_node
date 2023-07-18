@@ -25,7 +25,7 @@ const create=async(req, res, next) => {
             groupUser_id,user_id,group_id, currentDate
           };
         pusher.trigger("my-channel", "my-event", {
-            grupo: dataInsert
+            group_user: dataInsert
         });
         res.status(201).send({
             message: "Grupos de utilizadores registado com sucesso!",

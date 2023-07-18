@@ -21,7 +21,7 @@ try {
    const query= "DELETE FROM groups_users WHERE id=?";
    const result=await mysql.execute(query,[id]);
    pusher.trigger("my-channel", "my-event", {
-    grupo: resu[0]
+    group_user: resu[0]
 });
    return res.status(200).send({
     message: "Grupos de utilizadores apagado com sucesso!",

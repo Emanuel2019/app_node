@@ -32,7 +32,7 @@ const update = async (req, res, next) => {
             id,user_id,group_id,currentDate
         }
         pusher.trigger("my-channel", "my-event", {
-            grupo: dataUpdate
+            group_user: dataUpdate
         });
         return res.status(200).send({
             message: "Grupos de utilizadores actualizado com sucesso!",

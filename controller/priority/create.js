@@ -25,7 +25,7 @@ const create = async (req, res, next) => {
             id, name, duration, responseTime
         }
         pusher.trigger("my-channel", "my-event", {
-            grupo: dataInsert
+            prioridade: dataInsert
         });
         res.status(201).send({
             message: "Prioridade registada com sucesso!",
