@@ -7,6 +7,7 @@ const clientGetId=require('../controller/clients/getId');
 const clientCreate=require('../controller/clients/create');
 const clientUpdate=require('../controller/clients/update');
 const clientDelete=require('../controller/clients/delete');
+const clientUpload=require('../controller/clients/upload');
 
 const autenticado = require('../middleware/login');
 const storage = multer.diskStorage({
@@ -22,6 +23,7 @@ const storage = multer.diskStorage({
 route.get('/',autenticado.obrigatorio,clientGetAll);
 // Regista um novo cliente
 route.post('/',autenticado.obrigatorio,upload, clientCreate);
+route.post('/upload',autenticado.obrigatorio,upload, clientUpload);
 // Lista um cliente especifico
 route.get('/:id',autenticado.obrigatorio,clientGetId);
 // Atualiza um cliente especifico

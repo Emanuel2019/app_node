@@ -18,7 +18,7 @@ const removeFiles = async (filenames) => {
 
         if (!fs.existsSync(filePath)) {
             console.error('Arquivo não encontrado:', filePath);
-            return Promise.resolve(); // Ignore removal if the file doesn't exist
+            return Promise.resolve(); 
         }
 
         return new Promise((resolve, reject) => {

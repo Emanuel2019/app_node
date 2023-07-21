@@ -5,7 +5,7 @@ const morgan= require('morgan');
 const bodyParser= require('body-parser');
 const rotaUser= require('./routes/users');
 const rotaClient= require('./routes/clients');
-const rotaTask= require('./routes/tasks');
+const rotaTask= require('./routes/task');
 const rotaArea= require('./routes/areas');
 const rotaType= require('./routes/types');
 const rotaGroup= require('./routes/groups');
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 );
 app.use('/users', rotaUser);
 app.use('/clients', rotaClient);
-app.use('/tasks', rotaTask);
+app.use('/task', rotaTask);
 app.use('/areas', rotaArea);
 app.use('/types', rotaType);
 app.use('/groups', rotaGroup);

@@ -1,4 +1,5 @@
 const mysql = require("../mysql");
+const { addDays, differenceInHours, format } = require('date-fns');
 const getAll = async (req, res, next) => {
     try {
         const query = `SELECT tasks.id, tasks.name,tasks.description, tasks.created_at,tasks.updated_at,users.id AS user_id, users.name AS user_name,
@@ -16,9 +17,11 @@ const getAll = async (req, res, next) => {
     JOIN channels ON tasks.channel_id = channels.id;
 `;
 
-
         const result = await mysql.execute(query);
         const tasks = result.map((task) => {
+            const threeDaysAfterCreation = addDays(new Date(task.created_at), 3);
+            // Calcule a diferença em horas entre a data de criação e três dias depois
+            const totalHoursAfterThreeDays = differenceInHours(new Date(), threeDaysAfterCreation);
             return {
                 id: task.id,
                 name: task.name,
@@ -61,12 +64,13 @@ const getAll = async (req, res, next) => {
                 active: task.active,
                 created_at: task.created_at,
                 updated_at: task.updated_at,
+               total:totalHoursAfterThreeDays
             };
         });
-        console.log(tasks)
+       
         return res.status(200).send({
-            tasks: tasks,
-            
+            task: tasks,
+
         });
     } catch (error) {
         return res.status(500).send({

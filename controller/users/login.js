@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt');
 const jwt=require('jsonwebtoken')
 const login = async (req, res) => {
     const {email,password}=req.body
-    if(req.body.email.trim()===''||req.body.password.trim()===''){
+console.log(email,password)
+    if(req.body.email===''||req.body.password===''){
         return res.status(400).send({msg:"E-mail ou senha não devem estar vazios"})
 
     }
@@ -16,14 +17,12 @@ const login = async (req, res) => {
             })
         }
 
-        //check whether the user with that email exists or not
         if(result.length<1){
             return res.status(401).send({
                 msg:'E-mail ou password está incorreto'
             })
             }
           
-           //check password
            bcrypt.compare(password,result[0].password,(err,data)=>{
           
               if(err){
@@ -39,6 +38,11 @@ const login = async (req, res) => {
                     username:result[0].name,
                     email:result[0].email,
                     role:result[0].role,
+                    country:result[0].country,
+                    phone:result[0].country,
+                    photo:result[0].photo,
+                    
+
                 },
                 process.env.SECRET_KEY,{
                     expiresIn:"2h"
@@ -52,7 +56,7 @@ const login = async (req, res) => {
             return res.status(401).send({
                 msg:"Falha de Autenticação"
             });
-             //generate token
+       
            
           
           })

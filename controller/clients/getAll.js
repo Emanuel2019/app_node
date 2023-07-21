@@ -24,7 +24,7 @@ const getAll = async (req, res, next) => {
                 };
             });
             return res.status(200).send({
-                clientss: clientss,
+                client: clientss,
             });
 
     } catch (error) {
