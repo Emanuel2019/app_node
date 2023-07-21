@@ -31,5 +31,5 @@ wss.on('connection', (ws) => {
 
 // Inicia o servidor HTTP
 server.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}.`);
+    // console.log(`Servidor rodando na porta ${port}.`);
 });

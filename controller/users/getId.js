@@ -11,6 +11,7 @@ const getId = async (req, res, next) => {
                 role:user.role,
                 email: user.email,
                 active: user.active,
+                File:user.photo,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
             };

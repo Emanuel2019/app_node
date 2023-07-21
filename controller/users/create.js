@@ -2,39 +2,45 @@ const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const mysql = require('../mysql');
 const WebSocket = require('ws');
-const upload = require('express-fileupload');
+
 const Pusher = require("pusher");
 const pusher = new Pusher({
-  appId: "1636801",
-  key: "44ff09de68fa52623d22",
-  secret: "2c11e7f6d816dcf20694",
-  cluster: "sa1",
-  useTLS: true
+    appId: "1636801",
+    key: "44ff09de68fa52623d22",
+    secret: "2c11e7f6d816dcf20694",
+    cluster: "sa1",
+    useTLS: true
 });
-
 const create = async (req, res, next) => {
+   
+    const select_id = `SELECT email FROM users WHERE email=?`;
+    const resu = await mysql.execute(select_id, req.body.email);
+    let message;
+    const user_email = resu.map((row) => row.email);
+  
+    if (user_email==req.body.email) {
+        console.log(user_email);
+        message = "Este email já esta atribuido ao utilizador...";
+        return res.status(401).send({
+        message : message
+        });
+      
+    }
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(error => error.msg);
             return res.status(400).json({ errors: errorMessages });
         }
-
+     
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const currentDate = new Date();
-        if (req.files) {
-            const hours = String(currentDate.getHours()).padStart(2, '0');
-            const minutes = String(currentDate.getMinutes()).padStart(2, '0');
-            const secondes = String(currentDate.getSeconds()).padStart(2, '0');
-            var file = req.files.foto;
-            var filename = file.name;
-            filename = hours + minutes + secondes + "_" + filename;
-            file.mv('uploads/users/' + filename, function (err) {
+        let filename;
+        if (req.file) {
+            filename = req.file.filename
 
-                if (err) {
-                    res.send(err)
-                }
-            })
+        } else {
+            filename = "sem foto";
         }
 
         const query =
@@ -50,41 +56,38 @@ const create = async (req, res, next) => {
             currentDate,
             currentDate
         ]);
-        const id= resultado.insertId
-        const name=req.body.name;
-        const email=req.body.email;
-        const role=req.body.role;
-        const country=req.body.country;
-        const phone=req.body.phone;
-        const message="Utilizador registado com sucesso!";
-        const dataInsert={
-            "id":id,
-            "name":name,
-            "email":email,
-            "role":role,
-            "Páis":country,
-            "Telefone":phone,
-            "data da criação":currentDate,
-            "msg_insert":message
+        const id = resultado.insertId
+        const name = req.body.name;
+        const email = req.body.email;
+        const role = req.body.role;
+        const country = req.body.country;
+        const phone = req.body.phone;
+        const message = "Utilizador registado com sucesso!";
+        const dataInsert = {
+            id,
+            name,
+            email,
+            role,
+            country,
+            phone,
+            currentDate,
+            filename,
+            message
         };
-        
+
         pusher.trigger("my-channel", "my-event", {
-            users:dataInsert
-          });
+            users: dataInsert
+        });
         res.status(201).send({
             message: message,
-            Id:id,
-            name:name,
-            email:email,
-            role:role,
-            country:country,
-            phone:phone,
-            data:currentDate
+            users: dataInsert
 
         });
     } catch (error) {
         res.status(500).send({
             error: error,
+         
+            
         });
     }
 };

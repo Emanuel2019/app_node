@@ -1,7 +1,6 @@
 const express= require('express');
 const app = express();
-const fileupload=require('express-fileupload');
-
+const path = require('path');
 const morgan= require('morgan');
 const bodyParser= require('body-parser');
 const rotaUser= require('./routes/users');
@@ -17,8 +16,8 @@ const rotaChannels= require('./routes/channels');
 const rotaFiles= require('./routes/files');
 const rotaReplies= require('./routes/replies');
 app.use(morgan('dev'));
-app.use(fileupload());
-app.use('/upload', express.static('uploads/clients'));
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use((req, res, next) => {

@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const mysql = require("../mysql");
 const { body, validationResult } = require('express-validator');
-const upload = require('express-fileupload');
+
 const Pusher = require("pusher");
 const pusher = new Pusher({
     appId: "1636801",
@@ -12,6 +12,7 @@ const pusher = new Pusher({
 });
 
 const create = async (req, res, next) => {
+   
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
@@ -28,8 +29,10 @@ const create = async (req, res, next) => {
         phone2,
         email1,
         email2,
-
-        user_id } = req.body;
+        user_id,
+        obs,
+        nif
+    } = req.body;
         const message= "Cliente registado com sucesso!";
     try {
         const errors = validationResult(req);
@@ -37,36 +40,15 @@ const create = async (req, res, next) => {
             const errorMessages = errors.array().map(error => error.msg);
             return res.status(400).json({ errors: errorMessages });
         }
-        if (req.files) {
-            const hours = String(currentDate.getHours()).padStart(2, '0');
-            const minutes = String(currentDate.getMinutes()).padStart(2, '0');
-            const secondes = String(currentDate.getSeconds()).padStart(2, '0');
-            var file = req.files.foto;
-            var filename = file.name;
-            filename = hours + minutes + secondes + "_" + filename;
-            file.mv('uploads/clients/' + filename, function (err) {
-
-                if (err) {
-                    res.send(err)
-                }
-            })
+        let filename; // Declare the variable with let
+        if (req.file) {
+            filename = req.file.filename;
+        } else {
+            filename = "sem foto";
         }
-        const query = "INSERT INTO clients (reference, name, address, country, city, phone1, phone2, email1, email2,photo,  user_id) VALUES ( ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        const result = mysql.execute(query, [
-            reference,
-            name,
-            address,
-            country,
-            city,
-            phone1,
-            phone2,
-            email1,
-            email2,
-            filename,
-            user_id
-            ,]);
-        const dataInsert = {
+        
+        const query = "INSERT INTO clients (reference, name, address, country, city, phone1, phone2, email1, email2,photo, user_id,nif,obs) VALUES ( ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+        const result = await mysql.execute(query, [
             reference,
             name,
             address,
@@ -78,6 +60,26 @@ const create = async (req, res, next) => {
             email2,
             filename,
             user_id,
+            nif,
+            obs
+            ,]);
+        const id =result.insertId;
+       
+        const dataInsert = {
+            id,
+            reference,
+            name,
+            address,
+            country,
+            city,
+            phone1,
+            phone2,
+            email1,
+            email2,
+            filename,
+            nif,
+            obs,
+            user_id,
             
         };
         pusher.trigger("my-channel", "my-event", {
@@ -85,7 +87,7 @@ const create = async (req, res, next) => {
         });
         res.status(201).send({
             message:message,
-            Id: result.insertId,
+            client: dataInsert,
         });
 
 

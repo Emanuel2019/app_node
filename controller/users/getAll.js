@@ -9,7 +9,10 @@ const getAll = async (req, res, next) => {
                     id: user.id,
                     name: user.name,
                     email: user.email,
-                    username:user.name
+                    username:user.name,
+                    country:user.country,
+                    phone:user.phone,
+                    File:user.photo,
 
                    
                 };

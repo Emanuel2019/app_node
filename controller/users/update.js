@@ -1,6 +1,8 @@
 const mysql = require("../mysql");
 const bcrypt = require('bcrypt');
 const Pusher = require("pusher");
+const fs = require('fs');
+const path = require('path');
 const pusher = new Pusher({
     appId: "1636801",
     key: "44ff09de68fa52623d22",
@@ -8,41 +10,85 @@ const pusher = new Pusher({
     cluster: "sa1",
     useTLS: true
 });
-const { body, validationResult } = require('express-validator');
+const removeFiles = async (filenames) => {
+    const folderPath = path.join('uploads/users');
 
+    const filePromises = filenames.map((fname) => {
+        const filePath = path.join(folderPath, fname);
+
+        if (!fs.existsSync(filePath)) {
+            console.error('Arquivo não encontrado:', filePath);
+            return Promise.resolve(); // Ignore removal if the file doesn't exist
+        }
+
+        return new Promise((resolve, reject) => {
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error('Erro ao remover o arquivo:', err);
+                    reject(err);
+                } else {
+                    console.log(`Arquivo removido: ${filePath}`);
+                    resolve();
+                }
+            });
+        });
+    });
+
+    try {
+        await Promise.all(filePromises);
+        console.log('Todos os arquivos foram removidos com sucesso.');
+    } catch (err) {
+        console.error('Erro ao remover arquivos:', err);
+    }
+};
+const { body, validationResult } = require('express-validator');
 const update = async (req, res, next) => {
     const id = req.params.id;
     const currentDate = new Date();
+    let filename = "";
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const select_id = `SELECT id,name,email,role,country,phone FROM users WHERE id=${id}`;
     const resu = await mysql.execute(select_id);
-  
-    if(resu==""){
+    if (resu == "") {
         return res.status(500).send({
             message: "Este utilizado já não existe...",
         });
-    }else{
+    } else {
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 const errorMessages = errors.array().map(error => error.msg);
                 return res.status(400).json({ errors: errorMessages });
             }
-    
+            if (req.file) {
+                filename = req.file.filename;
+                const select_tasks = `SELECT photo FROM users WHERE id=${id}`;
+                const results = await mysql.execute(select_tasks);
+
+                const filenames = results.map((row) => row.photo);
+                console.log(filenames);
+                await removeFiles(filenames);
+
+            } else {
+                filename = "sem foto";
+            }
+
+
             const query =
-                "UPDATE users SET name=?,email=?,password=?,role=?,country=?,phone=?,active=?,updated_at=? WHERE id=?";
+                "UPDATE users SET name=?,email=?,password=?,role=?,country=?,photo=?,phone=?,active=?,updated_at=? WHERE id=?";
             const resultado = await mysql.execute(query, [
                 req.body.name,
                 req.body.email,
                 hashedPassword,
                 req.body.role,
                 req.body.country,
+                filename,
                 req.body.phone,
                 req.body.active,
                 currentDate,
                 id
             ]);
-    
+
             const name = req.body.name;
             const email = req.body.email;
             const role = req.body.role;
@@ -50,16 +96,17 @@ const update = async (req, res, next) => {
             const phone = req.body.phone;
             const message = "Utilizador registado com sucesso!";
             const dataUpdate = {
-                "id": id,
-                "name": name,
-                "email": email,
-                "role": role,
-                "Páis": country,
-                "Telefone": phone,
-                "data da criação": currentDate,
-                "msg_update": message
+                id,
+                name,
+                email,
+                role,
+                country,
+                phone,
+                filename,
+                currentDate,
+                message
             };
-    
+
             res.status(201).send({
                 message: "Utilizador actualizado com sucesso!",
                 user: {
@@ -69,20 +116,19 @@ const update = async (req, res, next) => {
                     role: req.body.role,
                     pais: req.body.country,
                     Telefone: req.body.phone,
-    
                 }
             });
             pusher.trigger("my-channel", "my-event", {
                 users: dataUpdate
             });
-    
+
         } catch (error) {
             res.status(500).send({
                 error: error,
             });
         }
     }
- 
+
 }
 
 module.exports = [

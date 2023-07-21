@@ -1,8 +1,8 @@
 const mysql = require("../mysql");
-const getId=async(req, res, next) => {
+const getId = async (req, res, next) => {
     const id = req.params.id;
     try {
-        const query=`SELECT tasks.id, tasks.name,tasks.description, tasks.created_at,tasks.updated_at,users.id AS user_id, users.name AS user_name,
+        const query = `SELECT tasks.id, tasks.name,tasks.description, tasks.created_at,tasks.updated_at,users.id AS user_id, users.name AS user_name,
         users.role AS roles,users.email AS user_email,users.country AS country_user,clients.id as client_id,
         clients.name AS client_name,types.id as type_id,types.name AS type_name,groups.id AS groups_id, groups.name AS group_name,
         areas.id as areas_id,areas.name AS area_name, status.id as status_id, status.name as status_name,channels.id As channel_id,
@@ -15,7 +15,10 @@ const getId=async(req, res, next) => {
         JOIN areas ON tasks.area_id = areas.id
         JOIN status ON tasks.status_id = status.id
         JOIN channels ON tasks.channel_id = channels.id where tasks.id=${id}`;
-        const result=await mysql.execute(query);
+        const select_tasks = `SELECT  filename FROM files WHERE task_id=${id}`;
+        const resut_id = await mysql.execute(select_tasks);
+        const filenames = resut_id.map((row) => row.filename);
+        const result = await mysql.execute(query);
         const tasks = result.map((task) => {
             return {
                 id: task.id,
@@ -63,6 +66,7 @@ const getId=async(req, res, next) => {
         });
         return res.status(200).send({
             tasks: tasks,
+            file:filenames
         });
 
     } catch (error) {
@@ -70,6 +74,6 @@ const getId=async(req, res, next) => {
             error: error,
         });
     }
-   
+
 }
-module.exports=getId;
+module.exports = getId;

@@ -15,6 +15,8 @@ const getAll = async (req, res, next) => {
     JOIN status ON tasks.status_id = status.id
     JOIN channels ON tasks.channel_id = channels.id;
 `;
+
+
         const result = await mysql.execute(query);
         const tasks = result.map((task) => {
             return {
@@ -61,8 +63,10 @@ const getAll = async (req, res, next) => {
                 updated_at: task.updated_at,
             };
         });
+        console.log(tasks)
         return res.status(200).send({
             tasks: tasks,
+            
         });
     } catch (error) {
         return res.status(500).send({

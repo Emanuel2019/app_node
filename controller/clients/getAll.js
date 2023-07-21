@@ -18,6 +18,7 @@ const getAll = async (req, res, next) => {
                     email2: clients.email2,
                     Active: clients.Active,
                     user_id: clients.user_id,
+                    file:clients.photo,
                     created_at: clients.created_at,
                     updated_at: clients.updated_at,
                 };
