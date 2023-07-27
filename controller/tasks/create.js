@@ -10,7 +10,6 @@ const pusher = new Pusher({
   useTLS: true
 });
 
-
 const create = async (req, res, next) => {
   const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
@@ -25,8 +24,11 @@ const create = async (req, res, next) => {
     status_id,
     channel_id,
   } = req.body;
+  console.log(name);
+
   try {
-    const query = "INSERT INTO tasks (name, description, user_id, client_id, type_id, group_id, area_id, status_id, channel_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    const query = "INSERT INTO tasks (name, description, user_id, client_id, type_id, group_id, area_id, status_id, channel_id, created_at, updated_at,start_date) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const result = await mysql.execute(query, [
       name,
       description,
@@ -39,19 +41,19 @@ const create = async (req, res, next) => {
       channel_id,
       currentDate,
       currentDate,
+      currentDate
     ]);
-
     const taskId = result.insertId;
     const file = req.files;
    
-    if(file.length>0){
+    if (file.length > 0) {
       for (const file of req.files) {
         const { filename } = file;
         const fileQuery = 'INSERT INTO files (filename, task_id, created_at, updated_at) VALUES (?, ?, ?, ?)';
         await mysql.execute(fileQuery, [filename, taskId, currentDate, currentDate]);
       }
     }
-   
+
     const dataInsert = {
       taskId,
       name,
@@ -64,8 +66,9 @@ const create = async (req, res, next) => {
       status_id,
       channel_id,
       currentDate,
-      
+
     };
+    
 
     pusher.trigger("my-channel", "my-event", {
       tasks: dataInsert

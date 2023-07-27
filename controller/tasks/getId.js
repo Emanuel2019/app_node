@@ -4,7 +4,7 @@ const getId = async (req, res, next) => {
     try {
         const query = `SELECT tasks.id, tasks.name,tasks.description, tasks.created_at,tasks.updated_at,users.id AS user_id, users.name AS user_name,
         users.role AS roles,users.email AS user_email,users.country AS country_user,clients.id as client_id,
-        clients.name AS client_name,types.id as type_id,types.name AS type_name,groups.id AS groups_id, groups.name AS group_name,
+        clients.name AS client_name,types.id as type_id,types.name AS type_name,groups.id AS group_id, groups.name AS group_name,
         areas.id as areas_id,areas.name AS area_name, status.id as status_id, status.name as status_name,channels.id As channel_id,
         channels.name AS channel_name
         FROM tasks
@@ -47,7 +47,7 @@ const getId = async (req, res, next) => {
 
                 },
                 areas: {
-                    area_id: task.area_id,
+                    id: task.areas_id,
                     name: task.area_name
                 },
                 status: {

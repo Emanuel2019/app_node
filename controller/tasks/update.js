@@ -12,14 +12,27 @@ const pusher = new Pusher({
 });
 const update = async (req, res, next) => {
     const id = req.params.id;
+    const active=1;
     const currentDate = new Date();
-    const { name, description, user_id, client_id, type_id, group_id, area_id, status_id, channel_id, active, created_at, updated_at } = req.body;
-
+    const { 
+        name, 
+        description, 
+        user_id, 
+        client_id, 
+        type_id, 
+        group_id, 
+        area_id, 
+        status_id, 
+        channel_id, 
+        created_at, 
+        updated_at 
+    } = req.body;
+    
     const select_id = `SELECT *FROM tasks WHERE id=${id}`;
     const resu = await mysql.execute(select_id);
 
     if (resu == "") {
-        return res.status(500).send({
+        return res.status(500).sdmfgFFG({
             message: ` Este tarefa não existe... `,
         });
     }
@@ -34,7 +47,6 @@ const update = async (req, res, next) => {
         const result = await mysql.execute(query,
             [name, description, user_id, client_id, type_id, group_id, area_id, status_id, channel_id, active, currentDate, id]
         );
-
 
         const select_tasks = `SELECT  filename FROM files WHERE task_id=${id}`;
         const resut_id = await mysql.execute(select_tasks);

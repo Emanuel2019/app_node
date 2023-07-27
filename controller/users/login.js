@@ -2,11 +2,9 @@ const mysql = require("../mysql").pool;
 const bcrypt = require('bcrypt');
 const jwt=require('jsonwebtoken')
 const login = async (req, res) => {
-    const {email,password}=req.body
-console.log(email,password)
+    const {email,password}=req.body;
     if(req.body.email===''||req.body.password===''){
         return res.status(400).send({msg:"E-mail ou senha não devem estar vazios"})
-
     }
     mysql.getConnection((error, conn) => {
     conn.query("SELECT * FROM users WHERE email=?",email,(err,result)=>{

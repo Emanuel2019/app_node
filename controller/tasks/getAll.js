@@ -1,4 +1,5 @@
 const mysql = require("../mysql");
+const moment = require('moment');
 const { addDays, differenceInHours, format } = require('date-fns');
 const getAll = async (req, res, next) => {
     try {
@@ -19,9 +20,22 @@ const getAll = async (req, res, next) => {
 
         const result = await mysql.execute(query);
         const tasks = result.map((task) => {
-            const threeDaysAfterCreation = addDays(new Date(task.created_at), 3);
-            // Calcule a diferença em horas entre a data de criação e três dias depois
-            const totalHoursAfterThreeDays = differenceInHours(new Date(), threeDaysAfterCreation);
+            //const threeDaysAfterCreation = addDays(new Date(task.created_at), 3);
+            const dataCriacao = moment(new Date(task.created_at));
+            //const threeDaysAfterCreation = '2023-07-27 12:00:00';
+
+            // Converter a string para um objeto moment
+            const creationDate = moment(dataCriacao, 'YYYY-MM-DD HH:mm:ss');
+            
+            // Data atual (moment)
+            const currentDate = moment();
+            
+            // Calcular a diferença em horas
+            let diffInHours = currentDate.diff(creationDate, 'hours');
+            
+            // Reduzir as horas a cada dia
+            const daysPassed = currentDate.diff(creationDate, 'days');
+            diffInHours -= daysPassed * 24;
             return {
                 id: task.id,
                 name: task.name,
@@ -64,7 +78,7 @@ const getAll = async (req, res, next) => {
                 active: task.active,
                 created_at: task.created_at,
                 updated_at: task.updated_at,
-               total:totalHoursAfterThreeDays
+               total:diffInHours
             };
         });
        
@@ -78,6 +92,5 @@ const getAll = async (req, res, next) => {
         });
     }
 }
-
 
 module.exports = getAll;

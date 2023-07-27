@@ -7,6 +7,7 @@ const tasksGeId=require('../controller/tasks/getId');
 const tasksCreate=require('../controller/tasks/create');
 const tasksUpdate=require('../controller/tasks/update');
 const tasksDelete=require('../controller/tasks/delete');
+const changeState=require('../controller/tasks/changeState');
 const autenticado = require('../middleware/login');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -17,6 +18,7 @@ const storage = multer.diskStorage({
     }
   });
   const upload = multer({ storage }).array('files',3);
+
 // Lista todos os tarefaes
 route.get('/',autenticado.obrigatorio, tasksGetAll);
 // Regista um novo tarefa
@@ -26,6 +28,7 @@ route.get('/:id',autenticado.obrigatorio,tasksGeId);
 // Atualiza um tarefa especifico
 route.put('/:id',autenticado.obrigatorio, upload,tasksUpdate);
 route.post('/:id',autenticado.obrigatorio,upload, tasksUpdate);
+route.post('/changeStatus/:task_id/:status_id',autenticado.obrigatorio,changeState);
 // Apaga um tarefa especifico
 route.delete('/:id',autenticado.obrigatorio,tasksDelete );
 module.exports = route;
